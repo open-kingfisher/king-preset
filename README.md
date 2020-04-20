@@ -10,7 +10,7 @@
 
 ## 特性
 
-实现Pod IP地址固定的需求，对于需要固定IP地址的业务可以使用此模块部署
+实现`Pod IP地址固定`的需求，对于需要固定IP地址的业务可以使用此模块部署
 
 ## 部署
 
@@ -19,14 +19,14 @@
 >```shell
 >./webhook-create-signed-cert.sh
 >```
-* 生成caBundle（需要在集群Master上运行） 输出的内容填写到 `mutatingwebhook.yaml` 和 `validatingwebhook.yaml` caBundle字段
+* 生成caBundle（需要在集群Master上运行） 输出的内容填写到 `mutatingwebhook.yaml` 和 `validatingwebhook.yaml` 的caBundle字段上面
 >```shell
 >./webhook-patch-ca-bundle.sh
 >```
 * 部署准入控制器webhook
 >```shell
->.kubectl create -f mutatingwebhook.yaml
->.validatingwebhook.yaml
+>kubectl create -f mutatingwebhook.yaml
+>kubectl create -f validatingwebhook.yaml
 >```
 
 ## 使用说明
