@@ -1,0 +1,23 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: king-preset
+  labels:
+    app: king-preset
+webhooks:
+  - name: fix.pod.ip
+    clientConfig:
+      service:
+        name: king-preset
+        namespace: default
+        path: "/preset/api/v1.10/mutate/fixpodip"
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLSFDFDGDGFlGSUNBVEUtLS0tLQo=
+    rules:
+      - operations: ["CREATE","UPDATE"]
+        apiGroups: ["apps", ""]
+        apiVersions: ["v1","v1beta1"]
+        resources: ["pods"]
+    objectSelector:
+      matchLabels:
+        fix-pod-ip: enabled
+
