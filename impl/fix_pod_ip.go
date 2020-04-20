@@ -168,7 +168,7 @@ func mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	return &v1beta1.AdmissionResponse{
 		Allowed: true,
 		Patch:   patchBytes,
-		PatchType: func() *v1beta1.PatchType { // 不用单独生成变量，直接命名函数返回
+		PatchType: func() *v1beta1.PatchType {
 			pt := v1beta1.PatchTypeJSONPatch
 			return &pt
 		}(),
@@ -236,7 +236,7 @@ func validate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 				if len(ip) < int(*replicas) {
 					allowed = false
 					result = &metav1.Status{
-						Reason: metav1.StatusReason(fmt.Sprintf("Validate: Replicas count %d less than or equal to ip count %d", *replicas, len(ip))),
+						Reason: metav1.StatusReason(fmt.Sprintf("Validate: Replicas count must %d less than or equal to ip count %d", *replicas, len(ip))),
 					}
 				}
 			}
