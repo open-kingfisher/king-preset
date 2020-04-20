@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: king-preset
+  labels:
+    app: king-preset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: king-preset
+  template:
+    metadata:
+      labels:
+        app: king-preset
+    spec:
+      containers:
+        - name: king-preset
+          image: registry.kingfisher.com.cn/kingfisher/king-preset
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: preset
+              mountPath: /etc/webhook/certs
+              readOnly: true
+      volumes:
+        - name: preset
+          secret:
+            secretName: king-preset
