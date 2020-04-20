@@ -27,6 +27,7 @@
 >```shell
 >kubectl create -f mutatingwebhook.yaml
 >kubectl create -f validatingwebhook.yaml
+>kubectl create -f deployment.yaml
 >```
 
 ## 使用说明
