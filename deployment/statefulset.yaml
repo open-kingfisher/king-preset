@@ -1,0 +1,24 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: web
+  namespace: kingfisher
+  labels:
+    fix-pod-ip: enabled
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+        fix-pod-ip: enabled
+      annotations:
+        fix.pod.ip: "[{\"node01.example.kingfisher.com\":[\"10.10.10.101\"]},{\"node002.example.kingfisher.com\":[\"10.10.10.102\"]},{\"node003.example.kingfisher.com\":[\"10.10.10.103\"]}]"
+    spec:
+      containers:
+        - name: web
+          image: nginx
+
