@@ -2,8 +2,8 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"kingfisher/kf/common"
-	"kingfisher/king-preset/impl"
+	"github.com/open-kingfisher/king-preset/impl"
+	"github.com/open-kingfisher/king-utils/common"
 	"net/http"
 )
 

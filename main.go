@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"kingfisher/kf/common/log"
-	"kingfisher/kf/config"
-	"kingfisher/kf/kit"
-	"kingfisher/king-preset/router"
+	"github.com/open-kingfisher/king-preset/router"
+	"github.com/open-kingfisher/king-utils/common/log"
+	"github.com/open-kingfisher/king-utils/config"
+	"github.com/open-kingfisher/king-utils/kit"
 )
 
 func main() {
