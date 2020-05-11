@@ -9,7 +9,7 @@ webhooks:
     clientConfig:
       service:
         name: king-preset
-        namespace: default
+        namespace: kingfisher
         path: "/preset/api/v1.10/validate/fixpodip"
       caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLSFDFDGDGFlGSUNBVEUtLS0tLQo=
     rules:
