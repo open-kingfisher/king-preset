@@ -48,7 +48,7 @@ done
 
 [ -z ${service} ] && service=king-preset
 [ -z ${secret} ] && secret=king-preset
-[ -z ${namespace} ] && namespace=kingfisher
+[ -z ${namespace} ] && namespace=kingfisher-system
 
 if [ ! -x "$(command -v openssl)" ]; then
     echo "openssl not found"
