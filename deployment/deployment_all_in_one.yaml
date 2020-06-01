@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: king-preset
+  namespace: kingfisher
+  labels:
+    app: king-preset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: king-preset
+  template:
+    metadata:
+      labels:
+        app: king-preset
+    spec:
+      containers:
+        - name: king-preset
+          image: xxxxxxx
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: preset
+              mountPath: /etc/webhook/certs
+              readOnly: true
+      volumes:
+        - name: preset
+          secret:
+            secretName: king-preset
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: king-preset
+  namespace: kingfisher
+spec:
+  ports:
+    - port: 443
+      targetPort: 443
+  selector:
+    app: king-preset
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: king-preset
+webhooks:
+  - name: fix.pod.ip
+    clientConfig:
+      service:
+        name: king-preset
+        namespace: kingfisher
+        path: "/preset/api/v1.10/validate/fixpodip"
+      caBundle: ${CA_PEM_B64}
+    rules:
+      - operations: ["CREATE","UPDATE"]
+        apiGroups: ["apps",""]
+        apiVersions: ["v1","v1beta1"]
+        resources: ["statefulsets"]
+    objectSelector:
+      matchLabels:
+        fix-pod-ip: enabled
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: king-preset
+webhooks:
+  - name: fix.pod.ip
+    clientConfig:
+      service:
+        name: king-preset
+        namespace: kingfisher
+        path: "/preset/api/v1.10/mutate/fixpodip"
+      caBundle: ${CA_PEM_B64}
+    rules:
+      - operations: ["CREATE","UPDATE"]
+        apiGroups: ["apps", ""]
+        apiVersions: ["v1","v1beta1"]
+        resources: ["pods"]
+    objectSelector:
+      matchLabels:
+        fix-pod-ip: enabled
+
