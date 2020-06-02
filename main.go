@@ -15,8 +15,9 @@ func main() {
 	// 设置路由
 	r := router.SetupRouter(kit.EnhanceGin(g))
 	// Listen and Server in 0.0.0.0:443
-	// cert.pem 和 key.pem 采用secret的方式挂载
-	if err := r.RunTLS(":443", "/etc/webhook/certs/cert.pem", "/etc/webhook/certs/key.pem"); err != nil {
+	// tls.crt 和 tls.key 采用secret的方式挂载
+	log.Info("Listen 443")
+	if err := r.RunTLS(":443", "/etc/webhook/certs/tls.crt", "/etc/webhook/certs/tls.key"); err != nil {
 		log.Fatalf("Listen error: %v", err)
 	}
 }
