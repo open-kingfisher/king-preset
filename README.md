@@ -16,14 +16,14 @@
 
 ## 部署
 
-* 执行deployment下面的deployment.sh，会根据deployment_all_in_one.yaml进行部署
+* 执行deployment目录下面的deployment.sh，会根据deployment_all_in_one.yaml进行部署
 >```shell
 >./deployment.sh
 >```
 
 ## 卸载
 
-* 执行deployment下面的uninstall.sh
+* 执行deployment目录下面的uninstall.sh
 >```shell
 >./uninstall.sh
 >```
