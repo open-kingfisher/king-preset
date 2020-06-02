@@ -16,20 +16,16 @@
 
 ## 部署
 
-* 使用k8s的CertificateSigningRequest API生成由k8s CA签署的证书 (需要在集群Master上运行），执行后会生成名字为king-preset的Secrets
-和名字为king-preset的CSR（CertificateSigningRequest）
+* 执行deployment下面的deployment.sh，会根据deployment_all_in_one.yaml进行部署
 >```shell
->./webhook-create-signed-cert.sh
+>./deployment.sh
 >```
-* 生成caBundle（需要在集群Master上运行） 输出的内容填写到 `mutatingwebhook.yaml` 和 `validatingwebhook.yaml` 的caBundle字段上面
+
+## 卸载
+
+* 执行deployment下面的uninstall.sh
 >```shell
->./webhook-patch-ca-bundle.sh
->```
-* 部署准入控制器webhook
->```shell
->kubectl create -f mutatingwebhook.yaml
->kubectl create -f validatingwebhook.yaml
->kubectl create -f deployment.yaml
+>./uninstall.sh
 >```
 
 ## 使用说明
