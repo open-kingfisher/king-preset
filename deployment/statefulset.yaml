@@ -4,12 +4,14 @@ metadata:
   name: web
   namespace: kingfisher
   labels:
+    app: web
     fix-pod-ip: enabled
 spec:
   replicas: 3
   selector:
     matchLabels:
       app: web
+      fix-pod-ip: enabled
   template:
     metadata:
       labels:
