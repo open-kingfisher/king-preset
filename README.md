@@ -45,7 +45,8 @@
         * metadata.labels 添加 `endpoint-external-ip: enabled` 此标签表示开启外部IP添加功能
         * metadata.labels 添加 `externalIP: 192.168.10.115-192.168.10.116-192.168.10.117` 代表想要添加的外部IP地址，使用`-`分隔
         * metadata.labels 添加 `externalPort: 80-8080` 代表想要添加的外部IP的端口，使用`-`分隔`
-    * 检查配置是否生效 kubectl get endpoint external -n Kingfisher
+    * 检查配置是否生效 kubectl get endpoint external -n kingfisher-system
+    
         >```json
         >{
         >    "apiVersion": "v1",
@@ -61,7 +62,7 @@
         >            "externalPort": "80-8080"
         >        },
         >        "name": "external",
-        >        "namespace": "kingfisher",
+        >        "namespace": "kingfisher-system",
         >        "resourceVersion": "56564640",
         >        "selfLink": "/api/v1/namespaces/kingfisher/endpoints/external",
         >        "uid": "e1d85dbd-7bbe-4d59-96c8-21073e00e5ed"
