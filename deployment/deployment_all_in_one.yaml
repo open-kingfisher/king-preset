@@ -60,6 +60,21 @@ webhooks:
     objectSelector:
       matchLabels:
         fix-pod-ip: enabled
+  - name: endpoint.external.ip
+    clientConfig:
+      service:
+        name: king-preset
+        namespace: kingfisher
+        path: "/preset/api/v1.10/validate/endpointexternalip"
+      caBundle: ${CA_PEM_B64}
+    rules:
+      - operations: ["CREATE","UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["services", "endpoints"]
+    objectSelector:
+      matchLabels:
+        endpoint-external-ip: enabled
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
@@ -81,3 +96,18 @@ webhooks:
     objectSelector:
       matchLabels:
         fix-pod-ip: enabled
+  - name: endpoint.external.ip
+    clientConfig:
+      service:
+        name: king-preset
+        namespace: kingfisher
+        path: "/preset/api/v1.10/mutate/endpointexternalip"
+      caBundle: ${CA_PEM_B64}
+    rules:
+      - operations: ["CREATE","UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["endpoints"]
+    objectSelector:
+      matchLabels:
+        endpoint-external-ip: enabled
