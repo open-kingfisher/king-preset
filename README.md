@@ -46,8 +46,8 @@
         * metadata.labels 添加 `externalIP: 192.168.10.115-192.168.10.116-192.168.10.117` 代表想要添加的外部IP地址，使用`-`分隔
         * metadata.labels 添加 `externalPort: 80-8080` 代表想要添加的外部IP的端口，使用`-`分隔`
     * 检查配置是否生效
-```json
-{
+>```json
+>{
     "apiVersion": "v1",
     "kind": "Endpoints",
     "metadata": {
@@ -94,7 +94,7 @@
         }
     ]
 }
-```
+>```
 
 ## Makefile的使用
 
