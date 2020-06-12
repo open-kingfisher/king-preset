@@ -14,6 +14,9 @@ func SetupRouter(r *gin.Engine) *gin.Engine {
 	// Pod IP 地址固定
 	r.POST(common.PresetPath+"mutate/fixpodip", impl.MutateFixPodIP)
 	r.POST(common.PresetPath+"validate/fixpodip", impl.ValidateFixPodIP)
+	// EndPoint 添加外部 IP
+	r.POST(common.PresetPath+"mutate/endpointexternalip", impl.MutateEndpointExternalIp)
+	r.POST(common.PresetPath+"validate/endpointexternalip", impl.ValidateEndpointExternalIp)
 
 	return r
 }
