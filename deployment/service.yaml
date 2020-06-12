@@ -1,12 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: king-preset
+  name: external
+  namespace: kingfisher-system
   labels:
-    app: king-preset
+    endpoint-external-ip: enabled
+    externalIP: 192.168.10.115-192.168.10.116-192.168.10.117
+    externalPort: 80-8080
 spec:
   ports:
-  - port: 443
-    targetPort: 443
+  - port: 80
+    targetPort: 80
   selector:
-    app: king-preset
+    app: external
