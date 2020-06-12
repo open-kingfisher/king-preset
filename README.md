@@ -48,52 +48,52 @@
     * 检查配置是否生效
 >```json
 >{
-    "apiVersion": "v1",
-    "kind": "Endpoints",
-    "metadata": {
-        "annotations": {
-            "endpoints.kubernetes.io/last-change-trigger-time": "2020-06-12T02:36:37Z"
-        },
-        "creationTimestamp": "2020-06-12T02:36:38Z",
-        "labels": {
-            "endpoint-external-ip": "enabled",
-            "externalIP": "192.168.10.115-192.168.10.116-192.168.10.117",
-            "externalPort": "80-8080"
-        },
-        "name": "external",
-        "namespace": "kingfisher",
-        "resourceVersion": "56564640",
-        "selfLink": "/api/v1/namespaces/kingfisher/endpoints/external",
-        "uid": "e1d85dbd-7bbe-4d59-96c8-21073e00e5ed"
-    },
-    "subsets": [
-        {
-            "addresses": [
-                {
-                    "ip": "192.168.10.115"
-                },
-                {
-                    "ip": "192.168.10.116"
-                },
-                {
-                    "ip": "192.168.10.117"
-                }
-            ],
-            "ports": [
-                {
-                    "name": "0",
-                    "port": 80,
-                    "protocol": "TCP"
-                },
-                {
-                    "name": "1",
-                    "port": 8080,
-                    "protocol": "TCP"
-                }
-            ]
-        }
-    ]
-}
+>    "apiVersion": "v1",
+>    "kind": "Endpoints",
+>    "metadata": {
+>        "annotations": {
+>            "endpoints.kubernetes.io/last-change-trigger-time": "2020-06-12T02:36:37Z"
+>        },
+>        "creationTimestamp": "2020-06-12T02:36:38Z",
+>        "labels": {
+>            "endpoint-external-ip": "enabled",
+>            "externalIP": "192.168.10.115-192.168.10.116-192.168.10.117",
+>            "externalPort": "80-8080"
+>        },
+>        "name": "external",
+>        "namespace": "kingfisher",
+>        "resourceVersion": "56564640",
+>        "selfLink": "/api/v1/namespaces/kingfisher/endpoints/external",
+>        "uid": "e1d85dbd-7bbe-4d59-96c8-21073e00e5ed"
+>    },
+>    "subsets": [
+>        {
+>            "addresses": [
+>                {
+>                    "ip": "192.168.10.115"
+>                },
+>                {
+>                    "ip": "192.168.10.116"
+>                },
+>                {
+>                    "ip": "192.168.10.117"
+>                }
+>            ],
+>            "ports": [
+>                {
+>                    "name": "0",
+>                    "port": 80,
+>                    "protocol": "TCP"
+>                },
+>                {
+>                    "name": "1",
+>                    "port": 8080,
+>                    "protocol": "TCP"
+>                }
+>            ]
+>        }
+>    ]
+>}
 >```
 
 ## Makefile的使用
