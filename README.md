@@ -14,6 +14,7 @@
 
 - 实现`Pod IP地址固定`的需求，对于需要固定IP地址的业务可以使用此模块部署
 - 实现`Service添加Kubernetes集群外部IP`的功能
+- 实现`Service可以设置备份Pod IP`功能， 可以用于单独Pod测试
 
 ## 部署
 
@@ -42,7 +43,7 @@
 
 * Service支持外部IP
     * 项目中deployment/service.yaml为示例部署service的YAML文件，需要注意以下几点
-        * metadata.labels 添加 `endpoint-external-ip: enabled` 此标签表示开启外部IP添加功能
+        * metadata.labels 添加 `endpoint-extend: endpoint-external-ip` 此标签表示开启外部IP添加功能
         * metadata.labels 添加 `externalIP: 192.168.10.115-192.168.10.116-192.168.10.117` 代表想要添加的外部IP地址，使用`-`分隔
         * metadata.labels 添加 `externalPort: 80-8080` 代表想要添加的外部IP的端口，使用`-`分隔`
     * 检查配置是否生效 `kubectl get endpoints external -n kingfisher-system`
@@ -94,6 +95,53 @@
         >            ]
         >        }
         >    ]
+        >}
+    >```
+* Service支持备份Pod IP
+    * 项目中deployment/service.yaml为示例部署service的YAML文件，需要注意以下几点
+        * metadata.labels 添加 `endpoint-extend: endpoint-backup-ip` 此标签表示开启外部IP添加功能
+        * metadata.labels 添加 `externalIP: 192.168.10.115-192.168.10.116-192.168.10.117` 代表想要添加的外部IP地址，使用`-`分隔，此IP必须是此Service可以正常选择到的Pod IP
+    * 检查配置是否生效 `kubectl get endpoints nginx -n kingfisher-system`  可以看到10.244.2.62不在其中
+    
+        >```json
+        >{
+        >   "apiVersion": "v1",
+        >    "kind": "Endpoints",
+        >    "metadata": {
+        >        "creationTimestamp": "2020-06-18T02:57:40Z",
+        >        "labels": {
+        >            "backupIP": "10.244.2.62",
+        >            "endpoint-extend": "endpoint-backup-ip"
+        >        },
+        >        "name": "nginx",
+        >        "namespace": "default",
+        >       "resourceVersion": "58472728",
+        >       "selfLink": "/api/v1/namespaces/default/endpoints/nginx",
+        >       "uid": "feb4d17d-ccc2-4042-bfd4-59ad5b45fbf1"
+        >    },
+        >    "subsets": [
+        >       {
+        >           "addresses": [
+        >               {
+        >                   "ip": "10.244.2.63",
+        >                   "nodeName": "node03",
+        >                   "targetRef": {
+        >                       "kind": "Pod",
+        >                       "name": "nginx-75b6fcb998-n6vnt",
+        >                       "namespace": "default",
+        >                       "resourceVersion": "58463150",
+        >                       "uid": "30c17ecf-fc17-41a7-8452-e9346305ac7c"
+        >                   }
+        >               }
+        >           ],
+        >           "ports": [
+        >               {
+        >                   "port": 80,
+        >                   "protocol": "TCP"
+        >               }
+        >           ]
+        >       }
+        >   ]
         >}
     >```
 
