@@ -97,10 +97,10 @@
         >    ]
         >}
     >```
-* Service支持备份Pod IP
+* Service支持备份Pod IP，一旦主IP不可用备份IP将可以使用
     * 项目中deployment/service.yaml为示例部署service的YAML文件，需要注意以下几点
         * metadata.labels 添加 `endpoint-extend: endpoint-backup-ip` 此标签表示开启外部IP添加功能
-        * metadata.labels 添加 `externalIP: 192.168.10.115-192.168.10.116-192.168.10.117` 代表想要添加的外部IP地址，使用`-`分隔，此IP必须是此Service可以正常选择到的Pod IP
+        * metadata.labels 添加 `externalIP: 192.168.10.115-192.168.10.116-192.168.10.117` 代表想要暂时不启用的备份IP地址，使用`-`分隔，此IP必须是此Service可以正常选择到的Pod IP
     * 检查配置是否生效 `kubectl get endpoints nginx -n kingfisher-system`  可以看到10.244.2.62不在其中
     
         >```json
