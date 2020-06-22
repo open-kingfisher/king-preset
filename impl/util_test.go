@@ -30,3 +30,16 @@ func TestCheckDuplicate(t *testing.T) {
 		t.Error(list1, "false")
 	}
 }
+
+func TestEqualSlice(t *testing.T) {
+	list := []string{"a", "b", "c"}
+	list1 := []string{"a", "b", "c"}
+	if !EqualSlice(list, list1) {
+		t.Error("false")
+	}
+	list2 := []string{"a", "b", "c"}
+	list3 := []string{"a", "b", "d"}
+	if !EqualSlice(list2, list3) {
+		t.Error("false")
+	}
+}

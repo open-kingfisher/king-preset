@@ -3,6 +3,7 @@ package impl
 import (
 	"fmt"
 	corev1 "k8s.io/api/core/v1"
+	"reflect"
 	"regexp"
 )
 
@@ -12,6 +13,13 @@ const (
 	EndpointExternalIPEnableLabels    = "endpoint-external-ip"
 	RequiredServiceExternalIPLabels   = "externalIP"
 	RequiredServiceExternalPortLabels = "externalPort"
+
+	EndpointBackupIPEnableLabels  = "endpoint-backup-ip"
+	RequiredServiceBackupIPLabels = "backupIP"
+
+	Enabled        = "enabled"
+	Disabled       = "disabled"
+	EndpointExtend = "endpoint-extend"
 )
 
 type patchOperation struct {
@@ -57,6 +65,23 @@ func addSubset(subset corev1.EndpointSubset, index int) (patch patchOperation) {
 	}
 }
 
+// 为endpoint删除ip
+func deleteAddresses(addressesIndex, ipIndex int) (patch patchOperation) {
+	return patchOperation{
+		Op:   "remove",
+		Path: fmt.Sprintf("/subsets/%d/addresses/%d", addressesIndex, ipIndex),
+	}
+}
+
+// 为endpoint删除ip
+func replaceAddresses(addresses []corev1.EndpointAddress, addressesIndex int) (patch patchOperation) {
+	return patchOperation{
+		Op:    "replace",
+		Path:  fmt.Sprintf("/subsets/%d/addresses", addressesIndex),
+		Value: addresses,
+	}
+}
+
 // 检查IP地址是否合法
 func CheckIp(ip string) bool {
 	//addr := strings.Trim(ip, " ")
@@ -86,4 +111,9 @@ func CheckNotDuplicate(list []string) bool {
 		return false
 	}
 	return true
+}
+
+// 比较slice是否相等
+func EqualSlice(a, b []string) bool {
+	return reflect.DeepEqual(a, b)
 }
