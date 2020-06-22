@@ -60,12 +60,12 @@ webhooks:
     objectSelector:
       matchLabels:
         fix-pod-ip: enabled
-  - name: endpoint.external.ip
+  - name: endpoint.extend.ip
     clientConfig:
       service:
         name: king-preset
         namespace: kingfisher
-        path: "/preset/api/v1.10/validate/endpointexternalip"
+        path: "/preset/api/v1.10/validate/endpointextendip"
       caBundle: ${CA_PEM_B64}
     rules:
       - operations: ["CREATE","UPDATE"]
@@ -73,8 +73,10 @@ webhooks:
         apiVersions: ["v1"]
         resources: ["services", "endpoints"]
     objectSelector:
-      matchLabels:
-        endpoint-external-ip: enabled
+      matchExpressions:
+        - key: endpoint-extend
+          operator: In
+          values: ["endpoint-external-ip", "endpoint-backup-ip"]
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
@@ -96,12 +98,12 @@ webhooks:
     objectSelector:
       matchLabels:
         fix-pod-ip: enabled
-  - name: endpoint.external.ip
+  - name: endpoint.extend.ip
     clientConfig:
       service:
         name: king-preset
         namespace: kingfisher
-        path: "/preset/api/v1.10/mutate/endpointexternalip"
+        path: "/preset/api/v1.10/mutate/endpointextendip"
       caBundle: ${CA_PEM_B64}
     rules:
       - operations: ["CREATE","UPDATE"]
@@ -109,5 +111,7 @@ webhooks:
         apiVersions: ["v1"]
         resources: ["endpoints"]
     objectSelector:
-      matchLabels:
-        endpoint-external-ip: enabled
+      matchExpressions:
+        - key: endpoint-extend
+          operator: In
+          values: ["endpoint-external-ip", "endpoint-backup-ip"]
