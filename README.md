@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Go Report Card](https://goreportcard.com/badge/github.com/open-kingfisher/king-preset)](https://goreportcard.com/report/github.com/open-kingfisher/king-preset)
 
-通过准入控制器实现根据需求对Pod进行预设操作，如：sidecar注入，pod ip地址固定等
+通过准入控制器实现根据需求对Kubernetes相关资源进行预设操作，如：sidecar注入，pod ip地址固定等，Service扩展外部IP等
 
 ## 依赖
 
