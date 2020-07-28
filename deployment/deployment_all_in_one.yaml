@@ -115,3 +115,18 @@ webhooks:
         - key: endpoint-extend
           operator: In
           values: ["endpoint-external-ip", "endpoint-backup-ip"]
+  - name: log.sidecar.inject
+    clientConfig:
+      service:
+        name: king-preset
+        namespace: kingfisher
+        path: "/preset/api/v1.10/mutate/log"
+      caBundle: ${CA_PEM_B64}
+    rules:
+      - operations: ["CREATE","UPDATE"]
+        apiGroups: ["apps", ""]
+        apiVersions: ["v1","v1beta1"]
+        resources: ["pods"]
+    objectSelector:
+      matchLabels:
+        log-injection: enabled
