@@ -17,6 +17,9 @@ func SetupRouter(r *gin.Engine) *gin.Engine {
 	// EndPoint Extend
 	r.POST(common.PresetPath+"mutate/endpointextendip", impl.MutateEndpointExtendIp)
 	r.POST(common.PresetPath+"validate/endpointextendip", impl.ValidateEndpointExtendIp)
+	// Inject Log Sidecar
+	r.POST(common.PresetPath+"mutate/log", impl.MutateInjectLogSidecar)
+	r.POST(common.PresetPath+"validate/log", impl.ValidateInjectLogSidecar)
 
 	return r
 }
