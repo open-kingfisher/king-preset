@@ -17,9 +17,10 @@ const (
 	EndpointBackupIPEnableLabels  = "endpoint-backup-ip"
 	RequiredServiceBackupIPLabels = "backupIP"
 
-	Enabled        = "enabled"
-	Disabled       = "disabled"
-	EndpointExtend = "endpoint-extend"
+	Enabled                                = "enabled"
+	Disabled                               = "disabled"
+	EndpointExtend                         = "endpoint-extend"
+	InjectLogSidecarRequiredPodAnnotations = "log-injection"
 )
 
 type patchOperation struct {
@@ -79,6 +80,57 @@ func replaceAddresses(addresses []corev1.EndpointAddress, addressesIndex int) (p
 		Op:    "replace",
 		Path:  fmt.Sprintf("/subsets/%d/addresses", addressesIndex),
 		Value: addresses,
+	}
+}
+
+// 为Containers添加log container
+func addLogContainer(index int) (patch patchOperation) {
+	container := corev1.Container{
+		Name:  "king-log",
+		Image: "registry.wap.sina.cn/kingfisher/king-exporter:v1.1",
+		VolumeMounts: []corev1.VolumeMount{
+			corev1.VolumeMount{
+				Name:      "king-log",
+				ReadOnly:  true,
+				MountPath: "/opt",
+			},
+		},
+	}
+	return patchOperation{
+		Op:    "add",
+		Path:  fmt.Sprintf("/spec/containers/%d", index),
+		Value: container,
+	}
+}
+
+// 为Volumes添加configMap
+func addLogVolume(index int) (patch patchOperation) {
+	volume := corev1.Volume{
+		Name: "king-log",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: "log",
+				},
+				DefaultMode: func() *int32 {
+					var mode int32 = 420
+					return &mode
+				}(),
+			},
+		},
+	}
+	if index == 0 {
+		return patchOperation{
+			Op:    "add",
+			Path:  "/volumes",
+			Value: volume,
+		}
+	} else {
+		return patchOperation{
+			Op:    "add",
+			Path:  fmt.Sprintf("/spec/volumes/%d", index),
+			Value: volume,
+		}
 	}
 }
 
