@@ -68,10 +68,11 @@ func ValidateInjectLogSidecar(c *gin.Context) {
 func MutateLog(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
 	var (
-		originalLables map[string]string
-		resourceName   string
-		patch          []patchOperation
-		pod            corev1.Pod
+		originalLabels      map[string]string
+		originalAnnotations map[string]string
+		resourceName        string
+		patch               []patchOperation
+		pod                 corev1.Pod
 	)
 
 	log.Infof("Mutate: AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
@@ -88,19 +89,16 @@ func MutateLog(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 			}
 		}
 		log.Infof("Mutate: AdmissionReview Resource: %+v", pod)
-		resourceName, originalLables = pod.Name, pod.Labels
+		resourceName, originalLabels, originalAnnotations = pod.Name, pod.Labels, pod.Annotations
 	default:
 		return &v1beta1.AdmissionResponse{
 			Allowed: true,
 		}
 	}
 
-	if v, ok := originalLables[InjectLogSidecarRequiredPodAnnotations]; !ok {
-		log.Errorf("Required pod label '%s' are not set", InjectLogSidecarRequiredPodAnnotations)
+	if v, ok := originalLabels[InjectLogSidecarRequiredPodAnnotations]; !ok {
 		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: fmt.Sprintf("Mutate: Required pod label '%s' are not set", InjectLogSidecarRequiredPodAnnotations),
-			},
+			Allowed: true,
 		}
 	} else {
 		if v == Enabled {
@@ -109,16 +107,42 @@ func MutateLog(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 			if pod.Spec.Volumes != nil {
 				index = len(pod.Spec.Volumes)
 			}
-			patch = append(patch, addLogVolume(index))
-			// container一定存在
-			patch = append(patch, addLogContainer(len(pod.Spec.Containers)))
+			configMapName := GetDeploymentNameByPod(pod.GetGenerateName())
+			patch = append(patch, addLogConfigMapVolume(index, configMapName))
+			patch = append(patch, addLogFileDirectoryVolume(index+1))
+
+			// 设置监控脚本执行周期
+			metricInterval := "60" // 默认60s
+			if interval, ok := originalAnnotations[MetricInterval]; ok {
+				metricInterval = interval
+			}
+			// 业务日志目录
+			logFileDirectory := "/var/log"
+			if directory, ok := originalAnnotations[LogFileDirectory]; ok {
+				logFileDirectory = directory
+			}
+			// container一定存在，添加日志容器
+			patch = append(patch, addLogContainer(len(pod.Spec.Containers), metricInterval, logFileDirectory))
+
+			// 业务容器添加日志目录
+			for indexContainer, container := range pod.Spec.Containers {
+				indexVolume := 0
+				if container.VolumeMounts != nil {
+					indexVolume = len(container.VolumeMounts)
+				}
+				patch = append(patch, addBusinessLogVolume(indexContainer, indexVolume, logFileDirectory))
+			}
+
+			// 添加prometheus注解
+			pPatch := addPrometheusAnnotation(configMapName)
+			patch = append(patch, pPatch...)
 
 		}
 	}
 
 	patchBytes, err := json.Marshal(patch)
 	if err != nil {
-		errorMassage := fmt.Sprintf("json.Marshal patch: '%s' error: %s", patch, err)
+		errorMassage := fmt.Sprintf("json.Marshal patch: '%s' error: %v", patch, err)
 		log.Errorf(errorMassage)
 		return &v1beta1.AdmissionResponse{
 			Result: &metav1.Status{
@@ -142,15 +166,39 @@ func MutateLog(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 func ValidateLog(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
 	var (
+		originalLabels         map[string]string
 		originalPodAnnotations map[string]string
 		resourceName           string
-		replicas               *int32
 	)
 
 	log.Infof("Validate: AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
 		req.Kind, req.Namespace, req.Name, resourceName, req.UID, req.Operation, req.UserInfo)
 
+	// 删除的时候也要删除ConfigMap
+	if req.Operation == v1beta1.Delete {
+		if err := DeleteConfigMap(req.Name, req.Namespace); err != nil {
+			log.Errorf("delete configMap error: name=%s, namespace:%s %v", req.Name, req.Namespace, err)
+		}
+		return &v1beta1.AdmissionResponse{
+			Allowed: true,
+		}
+	}
+
 	switch req.Kind.Kind {
+	case "Deployment":
+		var dep appsv1.Deployment
+		if err := json.Unmarshal(req.Object.Raw, &dep); err != nil {
+			log.Errorf("Validate: Can't unmarshal raw object to Deployment: %v", err)
+			return &v1beta1.AdmissionResponse{
+				Result: &metav1.Status{
+					Message: err.Error(),
+				},
+			}
+		}
+		resourceName = dep.Name
+		originalLabels = dep.Labels
+		originalPodAnnotations = dep.Spec.Template.Annotations
+		log.Infof("Validate: Deployment for %v", dep)
 	case "StatefulSet":
 		var sts appsv1.StatefulSet
 		if err := json.Unmarshal(req.Object.Raw, &sts); err != nil {
@@ -162,52 +210,80 @@ func ValidateLog(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 			}
 		}
 		resourceName = sts.Name
-		// 获取StatefulSet下Pod模板注解，里面应该有此次固定IP的地址
-		// 例如: fixed.pod.ip: "[{\"node1\":\"192.168.101.10\"},{\"node2\":\"192.168.102.10\"},{\"node3\":\"192.168.103.10\"}]"
+		originalLabels = sts.Labels
 		originalPodAnnotations = sts.Spec.Template.Annotations
-		// 获取StatefulSet副本数
-		replicas = sts.Spec.Replicas
+		log.Infof("Validate: StatefulSet for %v", sts)
 	default:
 		return &v1beta1.AdmissionResponse{
 			Allowed: true,
 		}
 	}
 
-	allowed := true
-	var result *metav1.Status
-	log.Info("original pod annotations: ", originalPodAnnotations)
-	log.Info("required pod annotations: ", RequiredPodAnnotations)
-	if v, ok := originalPodAnnotations[RequiredPodAnnotations]; !ok {
-		allowed = false
-		result = &metav1.Status{
-			Reason: metav1.StatusReason(fmt.Sprintf("Validate: Required pod annotation '%s' are not set", RequiredPodAnnotations)),
+	log.Info("original annotations: ", originalLabels)
+
+	value, ok := originalLabels[InjectLogSidecarRequiredPodAnnotations]
+	if !ok {
+		// log-injection不存在要删除ConfigMap
+		// 在用户去除log-injection标签进行提交的时候，还会过一下这个准入控制器，用于
+		// 删除ConfigMap，再次提交将不会过这个准入控制器
+		if err := DeleteConfigMap(resourceName, req.Namespace); err != nil {
+			log.Errorf("delete configMap error: name=%s, namespace:%s %v", resourceName, req.Namespace, err)
 		}
-	} else {
-		ip := []map[string][]string{}
-		if err := json.Unmarshal([]byte(v), &ip); err != nil {
-			allowed = false
-			result = &metav1.Status{
-				Reason: metav1.StatusReason(fmt.Sprintf("Validate: Unmarshal '%s' value error: %s", RequiredPodAnnotations, err)),
-			}
-		} else {
-			if replicas == nil {
-				allowed = false
-				result = &metav1.Status{
-					Reason: metav1.StatusReason(fmt.Sprintf("Validate: Replicas is empty")),
-				}
-			} else {
-				// 副本数量必须小于所提供的IP数量
-				if len(ip) < int(*replicas) {
-					allowed = false
-					result = &metav1.Status{
-						Reason: metav1.StatusReason(fmt.Sprintf("Validate: Replicas count %d less than or equal to ip count %d", *replicas, len(ip))),
-					}
-				}
-			}
+		return &v1beta1.AdmissionResponse{
+			Allowed: true,
 		}
 	}
+	if value == Enabled {
+		if directory, ok := originalPodAnnotations[LogFileDirectory]; !ok {
+			return &v1beta1.AdmissionResponse{
+				Allowed: false,
+				Result: &metav1.Status{
+					Reason: metav1.StatusReason(fmt.Sprintf("Validate: Required spec.template.annotation '%s' are not set", LogFileDirectory)),
+				},
+			}
+		} else if directory == "" {
+			return &v1beta1.AdmissionResponse{
+				Allowed: false,
+				Result: &metav1.Status{
+					Reason: metav1.StatusReason(fmt.Sprintf("Validate: Required spec.template.annotation '%s' are not empty", LogFileDirectory)),
+				},
+			}
+		}
+		if err := GetConfigMap(resourceName, req.Namespace); err != nil { // configMap不存在的情况下创建对应configMap
+			// 创建configMap
+			data := map[string]string{
+				LogMetricsShell: "#!/bin/sh\n#输出文件必须放到/tmp/目录下面并且以.prom结尾\necho 'qps{Business=\"example\",product=\"example_product\"} 90' > /tmp/example.prom",
+			}
+			log.Info("stating create configMap")
+			if err := CreateConfigMap(resourceName, req.Namespace, data); err != nil {
+				log.Errorf("create configMap error: name=%s, namespace:%s %v", resourceName, req.Namespace, err)
+				return &v1beta1.AdmissionResponse{
+					Allowed: false,
+					Result: &metav1.Status{
+						Reason: metav1.StatusReason(fmt.Sprintf("Validate: Create ConfigMap '%s' is failure: '%s'", resourceName, err)),
+					},
+				}
+			}
+		}
+		// 删除的时候也要删除ConfigMap
+		if req.Operation == v1beta1.Delete {
+			if err := DeleteConfigMap(resourceName, req.Namespace); err != nil {
+				log.Errorf("delete configMap error: name=%s, namespace:%s %v", resourceName, req.Namespace, err)
+			}
+		}
+	} else {
+		// log-injection值不为enabled也要删除ConfigMap
+		// 在用户去除log-injection标签进行提交的时候，还会过一下这个准入控制器，用于
+		// 删除ConfigMap，再次提交将不会过这个准入控制器
+		if err := DeleteConfigMap(resourceName, req.Namespace); err != nil {
+			log.Errorf("delete configMap error: name=%s, namespace:%s %v", resourceName, req.Namespace, err)
+		}
+		return &v1beta1.AdmissionResponse{
+			Allowed: true,
+		}
+	}
+
 	return &v1beta1.AdmissionResponse{
-		Allowed: allowed,
-		Result:  result,
+		Allowed: true,
 	}
 }
