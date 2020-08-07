@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
+	"strconv"
 )
 
 func MutateInjectLogSidecar(c *gin.Context) {
@@ -234,6 +235,16 @@ func ValidateLog(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		}
 	}
 	if value == Enabled {
+		if interval, ok := originalPodAnnotations[MetricInterval]; ok {
+			if _, err := strconv.Atoi(interval); err != nil {
+				return &v1beta1.AdmissionResponse{
+					Allowed: false,
+					Result: &metav1.Status{
+						Reason: metav1.StatusReason(fmt.Sprintf("Validate: Required '%s' are not integer", MetricInterval)),
+					},
+				}
+			}
+		}
 		if directory, ok := originalPodAnnotations[LogFileDirectory]; !ok {
 			return &v1beta1.AdmissionResponse{
 				Allowed: false,
